@@ -1,7 +1,7 @@
 import json
 import re
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 import pandas as pd
 
@@ -94,11 +94,20 @@ def _player_slug(name):
 
 
 def _download(url):
+    request = Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "text/javascript,*/*;q=0.1",
+        },
+    )
     try:
-        with urlopen(url, timeout=20) as response:
+        with urlopen(request, timeout=20) as response:
             return response.read().decode("utf-8")
     except (HTTPError, URLError, TimeoutError) as exc:
-        raise ValueError(f"Could not retrieve Tennis Abstract data: {exc}") from exc
+        raise ValueError(
+            f"Could not retrieve Tennis Abstract data: {exc}"
+        ) from exc
 
 
 def _get_player_dob(slug, is_women):
