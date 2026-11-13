@@ -34,3 +34,7 @@ python -m pytest -q
 ```
 
 The tests use mock data and do not contact Tennis Abstract.
+
+## Personal Reflections
+
+This assignment taught me how to turn a one-time data analysis into a reusable Python package. I learned to handle the differences between women’s and men’s career files, especially how opponent ages are represented. I also used mock data to test the cleaning functions without relying on a live server. During integration, Tennis Abstract returned a 403 error in DataHub, which helped me distinguish a code issue from a limitation in accessing an external website.
