@@ -14,3 +14,23 @@ def test_clean_female_match():
     assert data.loc[0, "opponent"] == "Anne Miller"
     assert data.loc[0, "result"] == "L"
     assert data.loc[0, "opponent_age"] > 18
+
+
+from tennis_package.data import (
+    _clean_female_data,
+    _clean_male_data,
+    _parse_js,
+)
+
+
+MALE_JS = '''var morematchmx = [["20010910", "Spain F10", "Hard", "S", "L", "", "", "WC", "R32", "2-6 7-5 6-2", "3", "Guillermo Platel", "731", "", "", "R", "22.264202601"]];'''
+
+
+def test_clean_male_match():
+    matches = _parse_js(MALE_JS)
+    data = _clean_male_data(matches, pd.Timestamp("1981-09-26"))
+
+    assert len(data) == 1
+    assert data.loc[0, "opponent"] == "Guillermo Platel"
+    assert data.loc[0, "result"] == "L"
+    assert data.loc[0, "opponent_age"] == 22.26
