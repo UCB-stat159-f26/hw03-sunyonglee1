@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tennis-package"
+version = "0.1.0"
+description = "A package for retrieving and plotting tennis career data"
+
+[tool.setuptools.packages.find]
+include = ["tennis_package*"]
