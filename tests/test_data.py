@@ -1,0 +1,16 @@
+import pandas as pd
+
+from tennis_package.data import _clean_female_data, _parse_js
+
+
+FEMALE_JS = '''var morematchmx = [["19951030", "Canadian Open", "Carpet", "W", "L", "", "", "WC", "Q1", "6-1 6-1", "3", "Anne Miller", "149", "7", "", "R", "19770119", "", "USA", "0", "", "", "", "", "", "", "1995-W-WT-CAN-02A-1995-013"]];'''
+
+
+def test_clean_female_match():
+    matches = _parse_js(FEMALE_JS)
+    data = _clean_female_data(matches, pd.Timestamp("1981-09-26"))
+
+    assert len(data) == 1
+    assert data.loc[0, "opponent"] == "Anne Miller"
+    assert data.loc[0, "result"] == "L"
+    assert data.loc[0, "opponent_age"] > 18
