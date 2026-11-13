@@ -1,5 +1,13 @@
 import json
+import re
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
+
 import pandas as pd
+
+
+BASE_URL = "https://www.tennisabstract.com"
+
 
 
 def _parse_js(text):
@@ -74,6 +82,54 @@ def _clean_male_match(match, player_dob):
     except (ValueError, TypeError, IndexError):
         return None
     return _build_row(match, player_dob, match_date, opponent_age)
+
+
+def _player_slug(name):
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("Please provide a player's name.")
+    words = re.findall(r"[A-Za-z]+", name)
+    if not words:
+        raise ValueError("Please provide a valid player's name.")
+    return "".join(word[0].upper() + word[1:] for word in words)
+
+
+def _download(url):
+    try:
+        with urlopen(url, timeout=20) as response:
+            return response.read().decode("utf-8")
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise ValueError(f"Could not retrieve Tennis Abstract data: {exc}") from exc
+
+
+def _get_player_dob(slug, is_women):
+    if is_women:
+        path = f"/cgi-bin/wplayer-classic.cgi?p={slug}&f=ACareerqq"
+    else:
+        path = f"/cgi-bin/player.cgi?p={slug}"
+    html = _download(BASE_URL + path)
+    match = re.search(
+        r"Born:[\s\S]{0,120}?(\d{1,2}-[A-Za-z]{3}-\d{4})",
+        html,
+        re.I,
+    )
+    if not match:
+        raise ValueError(f"Could not find a birth date for {slug}.")
+    return pd.to_datetime(match.group(1), format="%d-%b-%Y")
+
+
+def get_player_data(name):
+    slug = _player_slug(name)
+    career_url = f"{BASE_URL}/jsmatches/{slug}Career.js"
+    matches = _parse_js(_download(career_url))
+    if not matches:
+        raise ValueError(f"No career matches found for {name!r}.")
+    is_women = len(matches[0]) <= 30
+    player_dob = _get_player_dob(slug, is_women)
+    cleaner = _clean_female_data if is_women else _clean_male_data
+    data = cleaner(matches, player_dob)
+    if data.empty:
+        raise ValueError(f"No usable career matches found for {name!r}.")
+    return data
 
 
 def _clean_male_data(matches, player_dob):
