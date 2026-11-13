@@ -110,21 +110,13 @@ def _download(url):
         ) from exc
 
 
-def _get_player_dob(slug, is_women):
-    if is_women:
-        path = f"/cgi-bin/wplayer-classic.cgi?p={slug}&f=ACareerqq"
-    else:
-        path = f"/cgi-bin/player.cgi?p={slug}"
-    html = _download(BASE_URL + path)
-    match = re.search(
-        r"Born:[\s\S]{0,120}?(\d{1,2}-[A-Za-z]{3}-\d{4})",
-        html,
-        re.I,
-    )
+def _get_player_dob(slug):
+    url = f"{BASE_URL}/jsmatches/{slug}.js"
+    text = _download(url)
+    match = re.search(r"\bvar\s+dob\s*=\s*['\"]?(\d{8})", text)
     if not match:
         raise ValueError(f"Could not find a birth date for {slug}.")
-    return pd.to_datetime(match.group(1), format="%d-%b-%Y")
-
+    return pd.to_datetime(match.group(1), format="%Y%m%d")
 
 def get_player_data(name):
     slug = _player_slug(name)
@@ -133,7 +125,7 @@ def get_player_data(name):
     if not matches:
         raise ValueError(f"No career matches found for {name!r}.")
     is_women = len(matches[0]) <= 30
-    player_dob = _get_player_dob(slug, is_women)
+    player_dob = _get_player_dob(slug)
     cleaner = _clean_female_data if is_women else _clean_male_data
     data = cleaner(matches, player_dob)
     if data.empty:

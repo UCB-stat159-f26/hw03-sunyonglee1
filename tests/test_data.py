@@ -47,7 +47,7 @@ def test_clean_male_match():
 def test_get_player_data_uses_mocked_downloads():
     with patch(
         "tennis_package.data._download",
-        side_effect=[FEMALE_JS, "Born: 26-Sep-1981"],
+        side_effect=[FEMALE_JS, "var dob=19810926;"],
     ) as download:
         data = get_player_data("Serena Williams")
 
